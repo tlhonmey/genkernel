@@ -1148,6 +1148,18 @@ then
 			run mount -t squashfs -o ro "${NEW_ROOT}${CDROOT_DEV}" "${NEW_ROOT}/mnt/livecd"
 			test_success 'mount /dev/loop0 /'
 			FS_LOCATION='mnt/livecd'
+		elif [ "${LOOPTYPE}" = 'zram' ]
+		then
+			good_msg 'Setting up compressed ramdisk'
+			modprobe zram
+			ZR_DEV="zram0"
+			echo $(grep MemTotal /proc/meminfo | awk '{print $2}')K > /sys/block/${ZR_DEV}/disksize
+			good_msg 'Formatting ramdisk'
+			mkfs.btrfs "/dev/${ZR_DEV}"
+			mount -ocompress "/dev/${ZR_DEV}" "${NEW_ROOT}"
+			good_msg 'Unpacking rootfs'
+			tar -xaf "${CDROOT_PATH}/${LOOPEXT}${LOOP}" -C ${NEW_ROOT} 
+
 		fi
 	fi # if [ -n "${CRYPT_ROOT}" ]
 
@@ -1212,7 +1224,7 @@ FSTAB
 	then
 		setup_unionfs ${NEW_ROOT} /${FS_LOCATION}
 		CHROOT=/union
-	elif [ "${aufs}" != '1'  ] && [ "${overlayfs}" != '1' ]
+	elif [ "${aufs}" != '1'  ] && [ "${overlayfs}" != '1' ] && [ "${LOOPTYPE}" != 'zram' ]
 	then
 		good_msg "Copying read-write image contents to tmpfs"
 

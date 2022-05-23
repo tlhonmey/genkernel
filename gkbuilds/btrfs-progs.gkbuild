@@ -36,4 +36,9 @@ src_install() {
 
 	ln -s btrfs "${D}"/sbin/btrfsck \
 		|| die "Failed to create symlink '${D}/sbin/btrfsck' to '${D}/sbin/btrfs'!"
+	
+	cp -a mkfs.btrfs.static "${D}"/sbin/mkfs.btrfs \
+		|| die "Failed to copy '${S}/mkfs.btrfs.static' to '${D}/sbin/btrfs'!"
+	"${STRIP}" --strip-all "${D}"/sbin/mkfs.btrfs \
+		|| die "Failed to strip '${D}/sbin/mkfs.btrfs'!"
 }
